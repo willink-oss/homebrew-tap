@@ -2,8 +2,8 @@
 # 配布元は GitHub Releases。tap 経由で使う:  brew install --cask willink-oss/tap/agentdeck
 # リリースごとに version と sha256 を更新する（packaging/README.md の手順参照）。
 cask "agentdeck" do
-  version "0.1.2"
-  sha256 "9f72f34e47590b4099e0416e12f222bf8cb8b65812c2e74f428bfd087a9da9ea"
+  version "0.2.0"
+  sha256 "ef0fa5898eb0b7eba9741c1b58d1181b5361bec966252dadaa4b559519ba3bb3"
 
   url "https://github.com/willink-oss/agentdeck/releases/download/v#{version}/Agent.Deck-#{version}-arm64.dmg"
   name "Agent Deck"
