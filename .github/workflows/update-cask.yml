@@ -2,8 +2,9 @@ name: Update agentdeck cask
 
 # Agent Deck の最新安定版（releases/latest はプレリリースを返さない）に
 # cask を自動追従させる。sha256 はリリース資産の digest をそのまま使うので
-# ダウンロード不要。リリース直後に資産が未添付なら何もしない（次回に追従）。
-# agentdeck 側のリリースは「全資産添付後に draft 公開」なので通常ここは揃っている。
+# ダウンロード不要。arm64 / x64 の両 dmg が揃っていなければ何もしない
+# （cask はデュアルアーチで、両方の sha が必要）。agentdeck 側のリリースは
+# 「全資産添付後に draft 公開」なので通常ここは揃っている。
 
 on:
   schedule:
@@ -26,17 +27,20 @@ jobs:
           json=$(gh api repos/willink-oss/agentdeck/releases/latest)
           tag=$(jq -r .tag_name <<<"$json")
           ver=${tag#v}
-          asset=$(jq -c '.assets[] | select(.name | endswith("-arm64.dmg"))' <<<"$json")
-          if [ -z "$asset" ]; then echo "no dmg asset on $tag yet — skipping"; exit 0; fi
-          sha=$(jq -r '.digest // empty' <<<"$asset")
-          sha=${sha#sha256:}
-          if [ -z "$sha" ]; then echo "asset has no digest — skipping"; exit 0; fi
+          arm_sha=$(jq -r '.assets[] | select(.name | endswith("-arm64.dmg")) | .digest // empty' <<<"$json")
+          x64_sha=$(jq -r '.assets[] | select(.name | endswith("-x64.dmg")) | .digest // empty' <<<"$json")
+          arm_sha=${arm_sha#sha256:}; x64_sha=${x64_sha#sha256:}
+          if [ -z "$arm_sha" ] || [ -z "$x64_sha" ]; then
+            echo "release $tag lacks one of the mac dmgs (arm=$([ -n "$arm_sha" ] && echo yes || echo no) x64=$([ -n "$x64_sha" ] && echo yes || echo no)) — skipping"
+            exit 0
+          fi
           current=$(sed -nE 's/^  version "(.*)"$/\1/p' Casks/agentdeck.rb)
           if [ "$current" = "$ver" ]; then echo "cask already at $ver"; exit 0; fi
           sed -i -E "s|^  version \".*\"$|  version \"$ver\"|" Casks/agentdeck.rb
-          sed -i -E "s|^  sha256 \".*\"$|  sha256 \"$sha\"|" Casks/agentdeck.rb
+          sed -i -E "s|^  sha256 arm:   \".*\",$|  sha256 arm:   \"$arm_sha\",|" Casks/agentdeck.rb
+          sed -i -E "s|^         intel: \".*\"$|         intel: \"$x64_sha\"|" Casks/agentdeck.rb
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -am "agentdeck $ver"
           git push
-          echo "cask updated: $current -> $ver"
+          echo "cask updated: $current -> $ver (arm+intel)"
