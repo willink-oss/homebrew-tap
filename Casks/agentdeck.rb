@@ -4,9 +4,9 @@
 cask "agentdeck" do
   arch arm: "arm64", intel: "x64"
 
-  version "0.3.2"
-  sha256 arm:   "9688e02749079cbf58611b1257aa94111784620894af4f868d40004892c65892",
-         intel: "a11d2d7c9b708ba56e475adc7910c23e057982f31e60f4f20bd2b4d681f61ed6"
+  version "0.3.3"
+  sha256 arm:   "55a9430197d909be0625aced8733ead605f196b4d9bc4947fd88ec1bde7513ec",
+         intel: "b0c28976b4a88230dcdb916a7d45232de3717ff8ab997b136151b6c874b1bd92"
 
   url "https://github.com/willink-oss/agentdeck/releases/download/v#{version}/Agent.Deck-#{version}-#{arch}.dmg"
   name "Agent Deck"
